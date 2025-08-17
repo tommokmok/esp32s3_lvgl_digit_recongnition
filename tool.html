@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MNIST 数字绘制器 - 科技风版</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            background-color: #181818;
+            background-image: url('https://img1.goodfon.com/wallpaper/nbig/8/20/gradient-blue-futuristic-background.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            width: 90%; /* 设置为 90%宽度 */
+        }
+
+        h1 {
+            text-align: center;
+            color: #5865F2;
+            font-size: 36px;
+            width: 100%;
+            text-shadow: 0 0 10px rgba(88, 101, 242, 0.5);
+        }
+
+        h3 {
+            text-align: center;
+            color: #888888;
+            font-size: 20px;
+            width: 100%;
+            text-shadow: 0 0 5px rgba(136, 136, 136, 0.5);
+        }
+
+        .instructions {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #aaaaaa;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .main-content {
+            display: flex;
+        }
+
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 20px;
+        }
+
+        canvas {
+            border: 2px solid #5865F2;
+            cursor: crosshair;
+            position: relative;
+            margin-bottom: 10px;
+            width: 504px; /* 画布宽度缩小至原来的0.9倍 */
+            height: 504px; /* 画布高度缩小至原来的0.9倍 */
+            background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 10px rgba(88, 101, 242, 0.5);
+        }
+
+        .output-container {
+            position: relative;
+        }
+
+        .output {
+            white-space: pre-wrap;
+            width: 400px;
+            height: 526px;
+            overflow-y: auto; /* 启用垂直滚动 */
+            border: 2px solid #5865F2;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            letter-spacing: -0.2px;
+            line-height: 1.0;
+            resize: both;
+            box-sizing: border-box;
+            color: #ffffff;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #5865F2;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+            margin-bottom: 10px;
+            font-size: 16px;
+            box-shadow: 0 0 10px rgba(88, 101, 242, 0.5);
+            display: block;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #4451C7;
+        }
+
+        .grid {
+            position: absolute;
+            pointer-events: none;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>MNIST 数字绘制器 </h1>
+        <h3>作者：豆包</h3>
+        <div class="instructions">
+            <p><strong>使用说明：</strong></p>
+            <p>1.在左侧画布上绘制数字。绘制完成后，可在右侧查看 MNIST 数据格式。2.你可以点击“清除”按钮清空画布，也可以调整格式化输出窗口的大小。3.点击“复制输出”按钮可将数组格式化输出内容复制到剪贴板。</p>
+            <p>Reference from: https://gitee.com/Shine_Zhang/esp32s3_dl_helloworld/tree/main/04_too</p>
+        </div>
+        <div class="main-content">
+            <div class="canvas-container">
+                <div style="position: relative;">
+                    <canvas id="canvas" width="504" height="504"></canvas>
+                    <canvas class="grid" width="504" height="504"></canvas>
+                </div>
+                <button onclick="clearCanvas()">清除</button>
+            </div>
+            <div class="output-container">
+                <div class="output" id="output"></div>
+                <button onclick="copyToClipboard()">复制输出</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const output = document.getElementById('output');
+        const gridCanvas = document.querySelector('.grid');
+        const gridCtx = gridCanvas.getContext('2d');
+        let drawing = false;
+
+        // 初始化画布
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 20; // 线宽保持不变
+        ctx.lineCap = 'round';
+
+        // 在网格画布上绘制网格
+        function drawGrid() {
+            gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+            gridCtx.strokeStyle = '#555555';
+            for (let i = 0; i < 28; i++) {
+                gridCtx.beginPath();
+                gridCtx.moveTo(i * 18, 0); // 网格线间隔调整
+                gridCtx.lineTo(i * 18, 504);
+                gridCtx.stroke();
+
+                gridCtx.beginPath();
+                gridCtx.moveTo(0, i * 18); // 网格线间隔调整
+                gridCtx.lineTo(504, i * 18);
+                gridCtx.stroke();
+            }
+        }
+        drawGrid();
+
+        // 鼠标事件用于绘制
+        canvas.addEventListener('mousedown', (e) => {
+            drawing = true;
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (drawing) {
+                ctx.lineTo(e.offsetX, e.offsetY);
+                ctx.stroke();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            drawing = false;
+            updateOutput();
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            drawing = false;
+        });
+
+        // 清除画布
+        function clearCanvas() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            updateOutput();
+        }
+
+        // 更新输出以显示 MNIST 数据格式
+        function updateOutput() {
+            const offScreenCanvas = document.createElement('canvas');
+            offScreenCanvas.width = 30;
+            offScreenCanvas.height = 25;
+            const offScreenCtx = offScreenCanvas.getContext('2d');
+            offScreenCtx.drawImage(canvas, 0, 0, 30, 25);
+            const imageData = offScreenCtx.getImageData(0, 0, 30, 25);
+            const data = imageData.data;
+            const mnistData = [];
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const alpha = data[i + 3];
+                //const gray = 255 - Math.floor((r + g + b) / 3 * (alpha / 255));
+                let gray = 255 - Math.floor((r + g + b) / 3 * (alpha / 255));
+                if (gray>0) gray=1;
+                mnistData.push(gray);
+            }
+
+            // 格式化为 C 风格的一维数组输出
+            let formattedOutput ='uint8_t mnistData[750] = {';
+            for (let i = 0; i < 750; i++) {
+                formattedOutput += mnistData[i].toString().padStart(3, ' ') + (i < 749 ? ', ' : '');
+            }
+            formattedOutput += '};';
+
+            output.textContent = formattedOutput;
+        }
+
+        // 复制输出到剪贴板
+        function copyToClipboard() {
+            navigator.clipboard.writeText(output.textContent).then(() => {
+                alert('输出已复制到剪贴板！');
+            }, (err) => {
+                console.error('复制失败：', err);
+            });
+        }
+    </script>
+</body>
+
+</html>

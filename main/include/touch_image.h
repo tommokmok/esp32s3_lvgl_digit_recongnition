@@ -67,7 +67,7 @@ public:
     {
         for (int y = 0; y < col_length; y++) {
             for (int x = 0; x < row_length; x++) {
-                printf(" %c ", data[y * row_length + x] == 0 ? ' ' : '*');
+                printf(" %c ", data[y * row_length + x] == 0 ? '-' : '*');
             }
             printf("\n");
         }
