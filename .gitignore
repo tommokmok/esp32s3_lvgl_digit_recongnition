@@ -1,0 +1,14 @@
+.vscode/
+build/
+sdkconfig.old
+sdkconfig
+bin/
+.idea/
+__pycache__/
+
+# unit test
+test_apps/*/*/build_*
+test_apps/*/override-result.sdkconfig
+pytest_log
+
+dependencies.lock*
