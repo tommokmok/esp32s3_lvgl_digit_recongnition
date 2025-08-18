@@ -260,7 +260,7 @@ static void touch_digit_task(void *arg)
     while (1)
     {
         // send data to dl inference
-        // g_image.print();
+        g_image.print();
         image_data_t image_data;
         image_data.size = g_image.col_length * g_image.row_length;
         image_data.data = new uint8_t[image_data.size];
@@ -270,7 +270,6 @@ static void touch_digit_task(void *arg)
             xQueueSend(xImageQueue, &image_data, portMAX_DELAY);
         }
 
-        // g_image.clear();
 
         vTaskDelay(3000); // Delay for 3 second before next iteration, 1ms I tick
     }
