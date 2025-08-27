@@ -7,7 +7,7 @@ target_compile_options(${esp-dl} PRIVATE -Wno-unused-variable -Wno-unused-but-se
 
 
 if(CONFIG_IDF_TARGET STREQUAL "esp32s3")
-    set(CONFIG_MODEL_FILE_PATH "models/esp32s3/touch_recognition.espdl")
+    set(CONFIG_MODEL_FILE_PATH "models/esp32s3/my_final_model.espdl")
 elseif(CONFIG_IDF_TARGET STREQUAL "esp32p4")
     set(CONFIG_MODEL_FILE_PATH "models/esp32p4/touch_recognition.espdl")
 endif()
