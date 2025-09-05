@@ -271,7 +271,8 @@ static void touch_digit_task(void *arg)
         }
 
 
-        vTaskDelay(3000); // Delay for 3 second before next iteration, 1ms I tick
+        vTaskDelay(pdMS_TO_TICKS(3000)); // Delay for 3 second before next iteration, 1ms I tick
+
     }
 }
 
