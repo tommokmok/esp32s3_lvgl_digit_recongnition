@@ -1,6 +1,6 @@
 idf_component_register(SRC_DIRS "."
                     INCLUDE_DIRS "include"
-                    REQUIRES digital_tube nvs_flash)
+                    REQUIRES nvs_flash)
 
 idf_component_get_property(esp-dl espressif__esp-dl COMPONENT_LIB)
 target_compile_options(${esp-dl} PRIVATE -Wno-unused-variable -Wno-unused-but-set-variable)

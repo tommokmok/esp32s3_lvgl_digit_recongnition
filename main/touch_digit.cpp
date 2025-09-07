@@ -10,11 +10,9 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "esp_err.h"
-#include "touch_sensor_lowlevel.h"
 #include "esp_timer.h"
 #include "touch_channel.h"
 #include "touch_digit.h"
-#include "driver/touch_sensor.h"
 #include "normalization_save.h"
 #include "touch_image.h"
 #include "dl_model_base.hpp"
@@ -22,7 +20,6 @@
 #include "dl_tensor_base.hpp"
 
 #include "touch_digit_recognition.h"
-#include "digital_tube.h"
 
 static const char *TAG = "touch_digit";
 
@@ -270,9 +267,7 @@ static void touch_digit_task(void *arg)
             xQueueSend(xImageQueue, &image_data, portMAX_DELAY);
         }
 
-
         vTaskDelay(pdMS_TO_TICKS(3000)); // Delay for 3 second before next iteration, 1ms I tick
-
     }
 }
 
@@ -365,18 +360,6 @@ static void touch_digit_task(void *arg)
 }
 #endif
 
-static void state_cb(uint32_t channel, touch_lowlevel_state_t state, void *state_values, void *arg)
-{
-    QueueHandle_t data_queue = (QueueHandle_t)arg;
-    data_array_t data_array = {0};
-    for (int i = 0; i < CHANNEL_NUM; i++)
-    {
-        touch_sensor_lowlevel_get_data(i + 1, &data_array[i]);
-    }
-
-    xQueueSendFromISR(data_queue, &data_array, NULL);
-    return;
-}
 
 void touch_digit_recognition_task(void *arg)
 {
@@ -402,39 +385,18 @@ void touch_digit_recognition_task(void *arg)
 
 esp_err_t touch_digit_init(void)
 {
-    // Init touch_digit_data
-    // get_normalization_data(&g_data);
-    // printf_touch_digit_data();
 
     // Create queue
     xImageQueue = xQueueCreate(10, sizeof(image_data_t));
 
-    uint32_t channel_list[] = CHANNEL_LIST;
-    touch_lowlevel_type_t channel_type[CHANNEL_NUM];
-    for (int i = 0; i < CHANNEL_NUM; i++)
-    {
-        channel_type[i] = TOUCH_LOWLEVEL_TYPE_TOUCH;
-    }
-
-    touch_lowlevel_config_t low_config = {
-        .channel_num = CHANNEL_NUM,
-        .channel_list = channel_list,
-        .channel_type = channel_type,
-        .proximity_count = 0,
-    };
-    // ESP_ERROR_CHECK(touch_sensor_lowlevel_create(&low_config));
-    // ESP_ERROR_CHECK(touch_sensor_lowlevel_start());
-    // touch_pad_set_charge_discharge_times(100);
-
     QueueHandle_t data_queue = xQueueCreate(10, sizeof(data_array_t));
     assert(data_queue != NULL);
 
-    touch_lowlevel_handle_t handle = NULL;
     TaskHandle_t task_handle = NULL;
     xTaskCreate(touch_digit_recognition_task, "touch_digit_recognition_task", 4096, NULL, 5, &task_handle);
 
     vTaskDelay(pdMS_TO_TICKS(1000));
     xTaskCreate(touch_digit_task, "touch_digit_task", 4096, data_queue, 5, &task_handle);
-    // touch_sensor_lowlevel_register(channel_list[0], &state_cb, data_queue, &handle);
+
     return ESP_OK;
 }
