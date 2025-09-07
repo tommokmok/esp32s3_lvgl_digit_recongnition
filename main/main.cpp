@@ -7,7 +7,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "touch_digit.h"
-
+#include "lvgl_ui.h"
 
 #include "nvs_flash.h"
 
@@ -24,7 +24,8 @@ extern "C" void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
-
+    /* Initialize LVGL and LVGL UI */
+    lvgl_ui_init();
 
     /* Initialize touch digit */
     touch_digit_init();
