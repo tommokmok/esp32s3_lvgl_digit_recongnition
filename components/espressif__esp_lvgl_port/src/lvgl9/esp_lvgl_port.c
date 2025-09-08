@@ -50,7 +50,25 @@ static lvgl_port_ctx_t lvgl_port_ctx;
 static void lvgl_port_task(void *arg);
 static esp_err_t lvgl_port_tick_init(void);
 static void lvgl_port_task_deinit(void);
-
+static void lvgl_print_log(lv_log_level_t level, const char *buf) {
+    // Choose your output method (ESP_LOGx, printf, etc.)
+    // switch (level) {
+    //     case LV_LOG_LEVEL_TRACE:
+    //         ESP_LOGV(TAG, "%s", buf); // Using ESP-IDF's verbose logging
+    //         break;
+    //     case LV_LOG_LEVEL_INFO:
+            ESP_LOGI(TAG, "%s", buf);
+    //         break;
+    //     case LV_LOG_LEVEL_WARN:
+    //         ESP_LOGW(TAG, "%s", buf);
+    //         break;
+    //     case LV_LOG_LEVEL_ERROR:
+    //         ESP_LOGE(TAG, "%s", buf);
+    //         break;
+    //     default:
+    //         break;
+    // }
+}
 /*******************************************************************************
 * Public API functions
 *******************************************************************************/
@@ -237,6 +255,7 @@ static void lvgl_port_task(void *arg)
     xTaskNotifyGive(task_to_notify);
     /* Tick init */
     lvgl_port_tick_init();
+    lv_log_register_print_cb(lvgl_print_log);
 
     ESP_LOGI(TAG, "Starting LVGL task");
     lvgl_port_ctx.running = true;

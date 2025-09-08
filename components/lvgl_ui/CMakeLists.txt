@@ -1,4 +1,4 @@
-idf_component_register(SRCS "lvgl_ui.c"
+idf_component_register(SRCS "lvgl_ui.c" "sketchpad.c"
                     INCLUDE_DIRS "."
                     REQUIRES "atanisoft__esp_lcd_touch_xpt2046 espressif__esp_lvgl_port lvgl__lvgl"
                     )
