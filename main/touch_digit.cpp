@@ -20,6 +20,7 @@
 #include "dl_tensor_base.hpp"
 
 #include "touch_digit_recognition.h"
+#include "lvgl_ui.h"
 
 static const char *TAG = "touch_digit";
 
@@ -375,6 +376,8 @@ void touch_digit_recognition_task(void *arg)
     
             // Not using digital tube, just do the prediction
             int result=touch_digit_recognition->predict(image_data.data);
+
+            lvgl_ui_update_digit_label(result);
 
             
         }

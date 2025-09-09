@@ -24,7 +24,8 @@ extern "C"
 
     typedef esp_err_t(Interface_send_to_dl_t)(uint8_t *data, size_t size);
     // C function declarations
-    void lvgl_ui_init(Interface_send_to_dl_t Func);
+    void lvgl_ui_init(Interface_send_to_dl_t *Func);
+    void lvgl_ui_update_digit_label(int digit);
 
 #ifdef __cplusplus
 }

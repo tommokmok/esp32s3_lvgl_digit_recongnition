@@ -303,6 +303,23 @@ static void toolbar_set_event_cb(lv_event_t *e)
 }
 #endif
 
+static lv_obj_t *label_prediction = NULL;
+static lv_obj_t *label_digit = NULL;
+
+// Function to update the digit label
+void lvgl_ui_update_digit_label(int digit)
+{
+        /* Task lock */
+    lvgl_port_lock(0);
+    if(label_digit) {
+        char buf[8];
+        snprintf(buf, sizeof(buf), "%d", digit);
+        lv_label_set_text(label_digit, buf);
+    }
+      /* Task unlock */
+    lvgl_port_unlock();
+}
+
 static void app_main_display(void)
 {
 
@@ -328,9 +345,18 @@ static void app_main_display(void)
 
     lv_canvas_set_draw_buf(_sketchpad, draw_buf);
 
-    // Serial.printf("Init: draw buffer address = %08x\r\n", ptr3);
     lv_canvas_fill_bg(_sketchpad, lv_color_hex3(0xccc), LV_OPA_COVER);
     lv_obj_align(_sketchpad, LV_ALIGN_CENTER, 0, 0);
+
+    /* Prediction label */
+    label_prediction = lv_label_create(scr);
+    lv_label_set_text_static(label_prediction, "Prediction:");
+    lv_obj_align(label_prediction, LV_ALIGN_BOTTOM_LEFT, 10, -10);
+
+    /* Digit label (dynamic) */
+    label_digit = lv_label_create(scr);
+    lv_label_set_text_static(label_digit, "0");
+    lv_obj_align(label_digit, LV_ALIGN_BOTTOM_LEFT, 120, -10);
 
     /* Button */
     static lv_coord_t sketchpad_toolbar_cw = LV_100ASK_SKETCHPAD_TOOLBAR_OPT_DELETE;
@@ -352,27 +378,6 @@ static void app_main_display(void)
 
 #endif
 
-#if 0
-   lv_obj_t *scr = lv_scr_act();
-    /* Label */
-    lv_obj_t *label = lv_label_create(scr);
-    lv_obj_set_width(label, EXAMPLE_LCD_H_RES);
-    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
-#if LVGL_VERSION_MAJOR == 8
-    lv_label_set_recolor(label, true);
-    lv_label_set_text(label, "#FF0000 "LV_SYMBOL_BELL" Hello world Espressif and LVGL "LV_SYMBOL_BELL"#\n#FF9400 "LV_SYMBOL_WARNING" For simplier initialization, use BSP "LV_SYMBOL_WARNING" #");
-#else
-    lv_label_set_text(label, LV_SYMBOL_BELL" Hello world Espressif and LVGL "LV_SYMBOL_BELL"\n "LV_SYMBOL_WARNING" For simplier initialization, use BSP "LV_SYMBOL_WARNING);
-#endif
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, 20);
-
-    /* Button */
-    lv_obj_t *btn = lv_btn_create(scr);
-    label = lv_label_create(btn);
-    lv_label_set_text_static(label, "Rotate screen");
-    lv_obj_align(btn, LV_ALIGN_BOTTOM_MID, 0, -30);
-    // lv_obj_add_event_cb(btn, _app_button_cb, LV_EVENT_CLICKED, NULL);
-#endif
     /* Task unlock */
     lvgl_port_unlock();
 }
