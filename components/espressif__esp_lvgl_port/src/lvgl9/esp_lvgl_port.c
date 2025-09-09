@@ -57,7 +57,7 @@ static void lvgl_print_log(lv_log_level_t level, const char *buf) {
     //         ESP_LOGV(TAG, "%s", buf); // Using ESP-IDF's verbose logging
     //         break;
     //     case LV_LOG_LEVEL_INFO:
-            ESP_LOGI(TAG, "%s", buf);
+            // ESP_LOGI(TAG, "%s", buf);
     //         break;
     //     case LV_LOG_LEVEL_WARN:
     //         ESP_LOGW(TAG, "%s", buf);

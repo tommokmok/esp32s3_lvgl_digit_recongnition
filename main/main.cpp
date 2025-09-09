@@ -25,7 +25,7 @@ extern "C" void app_main(void)
     ESP_ERROR_CHECK(ret);
 
     /* Initialize LVGL and LVGL UI */
-    lvgl_ui_init();
+    lvgl_ui_init(&touch_digit_send_to_dl);
 
     /* Initialize touch digit */
     touch_digit_init();

@@ -55,3 +55,7 @@ esp_err_t touch_dight_end_normalize(void);
  * @return false if normalization is not in progress
  */
 bool get_touch_dight_normalize_state(void);
+
+
+
+extern "C" esp_err_t touch_digit_send_to_dl(uint8_t *data, size_t size);

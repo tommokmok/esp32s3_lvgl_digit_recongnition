@@ -71,7 +71,7 @@ static void lv_100ask_sketchpad_constructor(const lv_obj_class_t *class_p, lv_ob
     lv_100ask_sketchpad_t *sketchpad = (lv_100ask_sketchpad_t *)obj;
 
     lv_draw_line_dsc_init(&sketchpad->line_rect_dsc);
-    sketchpad->line_rect_dsc.width = 4;
+    sketchpad->line_rect_dsc.width = 1;
     sketchpad->line_rect_dsc.round_start = true;
     sketchpad->line_rect_dsc.round_end = true;
     sketchpad->line_rect_dsc.color = lv_palette_main(LV_PALETTE_RED);

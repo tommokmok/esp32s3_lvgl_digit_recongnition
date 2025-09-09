@@ -16,12 +16,15 @@
 #include "esp_lvgl_port.h"
 
 #include "esp_lcd_touch_xpt2046.h"
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+    typedef esp_err_t(Interface_send_to_dl_t)(uint8_t *data, size_t size);
     // C function declarations
-    void lvgl_ui_init(void);
+    void lvgl_ui_init(Interface_send_to_dl_t Func);
 
 #ifdef __cplusplus
 }

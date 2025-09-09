@@ -257,15 +257,16 @@ static void touch_digit_task(void *arg)
     while (1)
     {
         // send data to dl inference
-        g_image.print();
-        image_data_t image_data;
-        image_data.size = g_image.col_length * g_image.row_length;
-        image_data.data = new uint8_t[image_data.size];
-        if (image_data.data != NULL)
-        {
-            memcpy(image_data.data, g_image.data, image_data.size);
-            xQueueSend(xImageQueue, &image_data, portMAX_DELAY);
-        }
+        // g_image.print();
+        // image_data_t image_data;
+        // image_data.size = g_image.col_length * g_image.row_length;
+        // image_data.data = new uint8_t[image_data.size];
+        // if (image_data.data != NULL)
+        // {
+            // memcpy(image_data.data, g_image.data, image_data.size);
+            // Send to processing the deep learning task
+            //  xQueueSend(xImageQueue, &image_data, portMAX_DELAY);
+        // }
 
         vTaskDelay(pdMS_TO_TICKS(3000)); // Delay for 3 second before next iteration, 1ms I tick
     }
@@ -360,7 +361,6 @@ static void touch_digit_task(void *arg)
 }
 #endif
 
-
 void touch_digit_recognition_task(void *arg)
 {
     image_data_t image_data = {};
@@ -371,11 +371,12 @@ void touch_digit_recognition_task(void *arg)
     {
         if (xQueueReceive(xImageQueue, &image_data, portMAX_DELAY) == pdTRUE)
         {
-            // digital_tube_write_num(0, touch_digit_recognition->predict(image_data.data));
+            // g_image.print();
+    
             // Not using digital tube, just do the prediction
-            touch_digit_recognition->predict(image_data.data);
+            int result=touch_digit_recognition->predict(image_data.data);
 
-            delete[] image_data.data;
+            
         }
     }
 
@@ -399,4 +400,25 @@ esp_err_t touch_digit_init(void)
     xTaskCreate(touch_digit_task, "touch_digit_task", 4096, data_queue, 5, &task_handle);
 
     return ESP_OK;
+}
+
+extern "C" esp_err_t touch_digit_send_to_dl(uint8_t *data, size_t size)
+{
+    image_data_t image_data;
+    image_data.size = size;
+    
+    if (data!= NULL)
+    {
+        // memcpy(image_data.data, g_image.data, image_data.size);
+        memcpy(g_image.data, data, image_data.size);
+        image_data.data = g_image.data;
+        xQueueSend(xImageQueue, &image_data, portMAX_DELAY);
+        return ESP_OK;
+    }
+    
+    else
+    {
+        return ESP_FAIL;
+    }
+
 }

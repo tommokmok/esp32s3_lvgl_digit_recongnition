@@ -12,12 +12,15 @@
 #define EXAMPLE_LCD_H_RES   (240)
 #define EXAMPLE_LCD_V_RES   (320)
 
+#define CANVAS_WIDTH    (25) //row
+#define CANVAS_HEIGHT   (30) //col
+
 /* LCD settings */
 #define EXAMPLE_LCD_SPI_NUM         (SPI3_HOST)
 #define EXAMPLE_LCD_PIXEL_CLK_HZ    (40 * 1000 * 1000)
 #define EXAMPLE_LCD_CMD_BITS        (8)
 #define EXAMPLE_LCD_PARAM_BITS      (8)
-#define EXAMPLE_LCD_COLOR_SPACE     (ESP_LCD_COLOR_SPACE_BGR)
+#define EXAMPLE_LCD_COLOR_SPACE     (ESP_LCD_COLOR_SPACE_RGB)
 #define EXAMPLE_LCD_BITS_PER_PIXEL  (16)
 #define EXAMPLE_LCD_DRAW_BUFF_DOUBLE (1)
 #define EXAMPLE_LCD_DRAW_BUFF_HEIGHT (50)
@@ -51,6 +54,8 @@ static lv_obj_t *_sketchpad;
 static void sketchpad_toolbar_event_cb(lv_event_t *e);
 static void toolbar_set_event_cb(lv_event_t *e);
 
+static Interface_send_to_dl_t *_pPredicFunc;
+
 
 // LVGL image declare
 LV_IMG_DECLARE(esp_logo)
@@ -63,6 +68,8 @@ static esp_lcd_touch_handle_t touch_handle = NULL;
 /* LVGL display and touch */
 static lv_display_t *lvgl_disp = NULL;
 static lv_indev_t *lvgl_touch_indev = NULL;
+
+static uint8_t _grayScaleBuffer[25 * 30] = {0};
 
 static esp_err_t app_lcd_init(void)
 {
@@ -215,7 +222,51 @@ static esp_err_t app_lvgl_init(void)
 //     // lv_disp_set_rotation(lvgl_disp, rotation);
 //     ESP_LOGI(TAG, "Button clicked");
 // }
+// Convert ARGB8888 buffer to grayscale (1 byte per pixel)
+void lv_color_argb8888_to_grayscale(const uint8_t *src, uint8_t *dst, int width, int height)
+{
+    int num_pixels = width * height;
+    for (int i = 0; i < num_pixels; i++) {
+        // ARGB8888: src[4*i+0]=A, src[4*i+1]=R, src[4*i+2]=G, src[4*i+3]=B
+        uint8_t r = src[4*i + 1];
+        uint8_t g = src[4*i + 2];
+        uint8_t b = src[4*i + 3];
+        // Standard luminance formula
+        uint8_t gray = (uint8_t)(0.299f * r + 0.587f * g + 0.114f * b);
+        // if (gray > 128) gray = 1; else gray = 0; // Binarization
+        dst[i] = gray;
+    }
+}
 
+// Convert RGB565 buffer to grayscale (1 byte per pixel)
+void lv_color_rgb565_to_grayscale(const uint16_t *src, uint8_t *dst, int width, int height)
+{
+    int num_pixels = width * height;
+    for (int i = 0; i < num_pixels; i++) {
+        uint16_t pixel = src[i];
+        // Extract RGB components
+        uint8_t r = (pixel>> 11) & 0x1F;
+        // uint8_t g = (pixel>>5) & 0x3F;
+        // uint8_t b = pixel& 0x1F;
+
+        // Standard luminance formula
+        // uint8_t gray = (uint8_t)(0.299f * r + 0.587f * g + 0.114f * b);
+        uint8_t gray = 0;
+        if ((r-25)>0) gray=1;//Test on the output buffer. Min=25 for no point
+        
+        dst[i] = gray;
+    }
+}
+void print_pixel()
+{
+    for (int y = 0; y < CANVAS_WIDTH; y++) {
+        for (int x = 0; x < CANVAS_HEIGHT; x++) {
+            // printf(" %c ", _grayScaleBuffer[y * CANVAS_HEIGHT + x] == 0 ? '-' : '*');
+            printf(" %3d ", _grayScaleBuffer[y * CANVAS_HEIGHT + x]);
+        }
+        printf("\n");
+    }
+}
 
 static void sketchpad_toolbar_event_cb(lv_event_t *e)
 {
@@ -234,14 +285,23 @@ static void sketchpad_toolbar_event_cb(lv_event_t *e)
         else if ((*toolbar_opt) == LV_100ASK_SKETCHPAD_TOOLBAR_OPT_WIDTH)
         {
            
-            static lv_coord_t sketchpad_toolbar_width = LV_100ASK_SKETCHPAD_TOOLBAR_OPT_WIDTH;
-            lv_obj_t *slider = lv_slider_create(lv_screen_active());
-            lv_obj_set_width(slider, lv_pct(90));
-            lv_slider_set_value(slider, (int32_t)(_sketchpad_t->line_rect_dsc.width), LV_ANIM_OFF);
-            // lv_obj_align_to(slider, obj, LV_ALIGN_OUT_TOP_MID, 0, 0);
-            lv_obj_align(slider, LV_ALIGN_CENTER, 0, 0);
-            lv_obj_add_event_cb(slider, toolbar_set_event_cb, LV_EVENT_ALL, &sketchpad_toolbar_width);
-            lv_obj_move_foreground(slider);
+            // static lv_coord_t sketchpad_toolbar_width = LV_100ASK_SKETCHPAD_TOOLBAR_OPT_WIDTH;
+            // lv_obj_t *slider = lv_slider_create(lv_screen_active());
+            // lv_obj_set_width(slider, lv_pct(90));
+            // lv_slider_set_value(slider, (int32_t)(_sketchpad_t->line_rect_dsc.width), LV_ANIM_OFF);
+            // // lv_obj_align_to(slider, obj, LV_ALIGN_OUT_TOP_MID, 0, 0);
+            // lv_obj_align(slider, LV_ALIGN_CENTER, 0, 0);
+            // lv_obj_add_event_cb(slider, toolbar_set_event_cb, LV_EVENT_ALL, &sketchpad_toolbar_width);
+            // lv_obj_move_foreground(slider);
+            ESP_LOGI(TAG, "Width toolbar clicked");
+
+            // Convert ARGB8888 buffer to grayscale (1 byte per pixel)
+            // lv_draw_buf_t *draw_buf = lv_canvas_get_draw_buf((lv_obj_t *) _sketchpad_t);
+            lv_color_rgb565_to_grayscale((const uint16_t *)(_sketchpad_t->draw_buf->data), _grayScaleBuffer, 30, 25);
+        
+            ESP_ERROR_CHECK((*_pPredicFunc)(_grayScaleBuffer, sizeof(_grayScaleBuffer)));
+     
+            // print_pixel();
         }
     }
 }
@@ -278,7 +338,7 @@ static void app_main_display(void)
     /* Your LVGL objects code here .... */
 #if 1
 
-    lv_draw_buf_t *draw_buf = lv_draw_buf_create(240, 300, LV_COLOR_FORMAT_ARGB8888, LV_STRIDE_AUTO);
+    lv_draw_buf_t *draw_buf = lv_draw_buf_create(30, 25, LV_COLOR_FORMAT_RGB565, LV_STRIDE_AUTO);
     _sketchpad = lv_100ask_sketchpad_create(lv_screen_active());
     lv_obj_set_scrollbar_mode(_sketchpad, LV_SCROLLBAR_MODE_OFF); // See no different in PC, but may have some difference in the TFT display
     lv_obj_set_scroll_snap_x(_sketchpad, LV_SCROLL_SNAP_NONE);
@@ -291,7 +351,7 @@ static void app_main_display(void)
 
     // Serial.printf("Init: draw buffer address = %08x\r\n", ptr3);
     lv_canvas_fill_bg(_sketchpad, lv_color_hex3(0xccc), LV_OPA_COVER);
-    lv_obj_align(_sketchpad, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_align(_sketchpad, LV_ALIGN_CENTER, 0, 0);
 
     static lv_coord_t sketchpad_toolbar_cw = LV_100ASK_SKETCHPAD_TOOLBAR_OPT_DELETE;
     lv_obj_t *color = lv_label_create(lv_screen_active());
@@ -343,8 +403,10 @@ static void app_main_display(void)
     lvgl_port_unlock();
 }
 
-void lvgl_ui_init(void)
+void lvgl_ui_init(Interface_send_to_dl_t *pFunc)
 {
+    assert(pFunc);
+    _pPredicFunc= pFunc;
     // esp_log_level_set("xpt2046", ESP_LOG_VERBOSE);
     /* LCD HW initialization */
     ESP_ERROR_CHECK(app_lcd_init());
