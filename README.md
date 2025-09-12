@@ -1,5 +1,12 @@
 # ESP32-S3 Digit Recognition in LVGL
 
+## Development Timeline
+
+| Date       | Milestone/Note   |
+|------------|------------------|
+| 2025-09-11 | Project started  |
+| 2025-09-12 | Add Imporvement: Larger input size, auto predic |
+
 ## Introduction
 
 This project demonstrates digit recognition on an ESP32-S3 development board. It is based on [touchpad_digit_recognition](https://github.com/espressif/esp-iot-solution/tree/master/examples/ai/esp_dl/touchpad_digit_recognition), and integrates the [LVGL library](https://github.com/tommokmok/esp32s3_lvgl_idf) and the [Sketchpad application](https://github.com/tommokmok/esp32s3_YetAnotherSketchpad).
@@ -46,11 +53,7 @@ For detailed implementation, please check my blog: [https://tommokmok.github.io/
 
 [Please check](https://youtube.com/shorts/B73eYAXCKzQ?feature=share)
 
-## Development Timeline
 
-| Date       | Milestone/Note   |
-|------------|------------------|
-| 2025-09-11 | Project started  |
 
 ## Prerequisites
 
@@ -72,6 +75,6 @@ For detailed implementation, please check my blog: [https://tommokmok.github.io/
 
 ## Improvements
 
-- The input size is currently too small. Consider increasing it from 64x64 to 128x128.
-- When clearing the screen, the output text should also reset to an empty state.
-- Can implment a real time digit recongnition
+- The input size is currently too small. Consider increasing it from 64x64 to 128x128. -- Done
+- When clearing the screen, the output text should also reset to an empty state. -- Done
+- Can implment a real time digit recongnition -- Done (Set to 200ms delay)

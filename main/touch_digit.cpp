@@ -92,20 +92,20 @@ esp_err_t touch_dight_end_normalize(void)
     return set_normalization_data(&data);
 }
 
-static void touch_digit_normalize(data_array_t data_array)
-{
-    uint32_t row_channel_list[] = ROW_CHANNEL_INDEX;
-    uint32_t col_channel_list[] = COL_CHANNEL_INDEX;
-    for (int i = 0; i < ROW_CHANNEL_NUM; i++)
-    {
-        g_data.row_data[i].update_max_min(data_array[row_channel_list[i] - 1]);
-    }
+// static void touch_digit_normalize(data_array_t data_array)
+// {
+//     uint32_t row_channel_list[] = ROW_CHANNEL_INDEX;
+//     uint32_t col_channel_list[] = COL_CHANNEL_INDEX;
+//     for (int i = 0; i < ROW_CHANNEL_NUM; i++)
+//     {
+//         g_data.row_data[i].update_max_min(data_array[row_channel_list[i] - 1]);
+//     }
 
-    for (int i = 0; i < COL_CHANNEL_NUM; i++)
-    {
-        g_data.col_data[i].update_max_min(data_array[col_channel_list[i] - 1]);
-    }
-}
+//     for (int i = 0; i < COL_CHANNEL_NUM; i++)
+//     {
+//         g_data.col_data[i].update_max_min(data_array[col_channel_list[i] - 1]);
+//     }
+// }
 
 static double compute_position(int position_a, int position_b, double value_a, double value_b)
 {
@@ -117,101 +117,101 @@ static double compute_position(int position_a, int position_b, double value_a, d
     return (position_a * value_a + position_b * value_b) / (value_a + value_b);
 }
 
-static bool touch_digit_detect(data_array_t data_array, int *x, int *y)
-{
-    uint32_t row_channel_list[] = ROW_CHANNEL_INDEX;
-    uint32_t col_channel_list[] = COL_CHANNEL_INDEX;
+// static bool touch_digit_detect(data_array_t data_array, int *x, int *y)
+// {
+//     uint32_t row_channel_list[] = ROW_CHANNEL_INDEX;
+//     uint32_t col_channel_list[] = COL_CHANNEL_INDEX;
 
-    // 1. normalize
-    int8_t max_row[2] = {0};
-    double max_value = 0;
-    for (int i = 0; i < ROW_CHANNEL_NUM; i++)
-    {
-        g_data.row_data[i].normalize(data_array[row_channel_list[i] - 1]);
-        if (g_data.row_data[i].normalized_data > max_value)
-        {
-            max_value = g_data.row_data[i].normalized_data;
-            max_row[0] = i;
-        }
-    }
+//     // 1. normalize
+//     int8_t max_row[2] = {0};
+//     double max_value = 0;
+//     for (int i = 0; i < ROW_CHANNEL_NUM; i++)
+//     {
+//         g_data.row_data[i].normalize(data_array[row_channel_list[i] - 1]);
+//         if (g_data.row_data[i].normalized_data > max_value)
+//         {
+//             max_value = g_data.row_data[i].normalized_data;
+//             max_row[0] = i;
+//         }
+//     }
 
-    if (max_value < 0.15)
-    {
-        return false;
-    }
+//     if (max_value < 0.15)
+//     {
+//         return false;
+//     }
 
-    // if 0 or 7, make it's neighbor
-    if (max_row[0] == 0)
-    {
-        max_row[1] = max_row[0] + 1;
-    }
-    else if (max_row[0] == ROW_CHANNEL_NUM - 1)
-    {
-        max_row[1] = max_row[0];
-        max_row[0] = max_row[0] - 1;
-    }
-    else
-    {
-        if (g_data.row_data[max_row[0] - 1].normalized_data > g_data.row_data[max_row[0] + 1].normalized_data)
-        {
-            max_row[1] = max_row[0];
-            max_row[0] = max_row[0] - 1;
-        }
-        else
-        {
-            max_row[1] = max_row[0] + 1;
-        }
-    }
+//     // if 0 or 7, make it's neighbor
+//     if (max_row[0] == 0)
+//     {
+//         max_row[1] = max_row[0] + 1;
+//     }
+//     else if (max_row[0] == ROW_CHANNEL_NUM - 1)
+//     {
+//         max_row[1] = max_row[0];
+//         max_row[0] = max_row[0] - 1;
+//     }
+//     else
+//     {
+//         if (g_data.row_data[max_row[0] - 1].normalized_data > g_data.row_data[max_row[0] + 1].normalized_data)
+//         {
+//             max_row[1] = max_row[0];
+//             max_row[0] = max_row[0] - 1;
+//         }
+//         else
+//         {
+//             max_row[1] = max_row[0] + 1;
+//         }
+//     }
 
-    int8_t max_col[2] = {0};
-    max_value = 0;
-    for (int i = 0; i < COL_CHANNEL_NUM; i++)
-    {
-        g_data.col_data[i].normalize(data_array[col_channel_list[i] - 1]);
-        if (g_data.col_data[i].normalized_data > max_value)
-        {
-            max_value = g_data.col_data[i].normalized_data;
-            max_col[0] = i;
-        }
-    }
+//     int8_t max_col[2] = {0};
+//     max_value = 0;
+//     for (int i = 0; i < COL_CHANNEL_NUM; i++)
+//     {
+//         g_data.col_data[i].normalize(data_array[col_channel_list[i] - 1]);
+//         if (g_data.col_data[i].normalized_data > max_value)
+//         {
+//             max_value = g_data.col_data[i].normalized_data;
+//             max_col[0] = i;
+//         }
+//     }
 
-    if (max_value < 0.15)
-    {
-        return false;
-    }
+//     if (max_value < 0.15)
+//     {
+//         return false;
+//     }
 
-    if (max_col[0] == 0)
-    {
-        max_col[1] = max_col[0] + 1;
-    }
-    else if (max_col[0] == COL_CHANNEL_NUM - 1)
-    {
-        max_col[1] = max_col[0];
-        max_col[0] = max_col[0] - 1;
-    }
-    else
-    {
-        if (g_data.col_data[max_col[0] - 1].normalized_data > g_data.col_data[max_col[0] + 1].normalized_data)
-        {
-            max_col[1] = max_col[0];
-            max_col[0] = max_col[0] - 1;
-        }
-        else
-        {
-            max_col[1] = max_col[0] + 1;
-        }
-    }
+//     if (max_col[0] == 0)
+//     {
+//         max_col[1] = max_col[0] + 1;
+//     }
+//     else if (max_col[0] == COL_CHANNEL_NUM - 1)
+//     {
+//         max_col[1] = max_col[0];
+//         max_col[0] = max_col[0] - 1;
+//     }
+//     else
+//     {
+//         if (g_data.col_data[max_col[0] - 1].normalized_data > g_data.col_data[max_col[0] + 1].normalized_data)
+//         {
+//             max_col[1] = max_col[0];
+//             max_col[0] = max_col[0] - 1;
+//         }
+//         else
+//         {
+//             max_col[1] = max_col[0] + 1;
+//         }
+//     }
 
-    double error = compute_position(0, 1, g_data.row_data[max_row[0]].normalized_data, g_data.row_data[max_row[1]].normalized_data);
-    int _x = max_row[0] * PRECISION + round(error * (PRECISION - 1));
+//     double error = compute_position(0, 1, g_data.row_data[max_row[0]].normalized_data, g_data.row_data[max_row[1]].normalized_data);
+//     int _x = max_row[0] * PRECISION + round(error * (PRECISION - 1));
 
-    error = compute_position(0, 1, g_data.col_data[max_col[0]].normalized_data, g_data.col_data[max_col[1]].normalized_data);
-    int _y = max_col[0] * PRECISION + round(error * (PRECISION - 1));
+//     error = compute_position(0, 1, g_data.col_data[max_col[0]].normalized_data, g_data.col_data[max_col[1]].normalized_data);
+//     int _y = max_col[0] * PRECISION + round(error * (PRECISION - 1));
 
-    *x = _x;
-    *y = _y;
-    return true;
-}
+//     *x = _x;
+//     *y = _y;
+//     return true;
+// }
 
 typedef struct
 {
@@ -372,12 +372,14 @@ void touch_digit_recognition_task(void *arg)
     {
         if (xQueueReceive(xImageQueue, &image_data, portMAX_DELAY) == pdTRUE)
         {
-            // g_image.print();
+            g_image.print();
     
             // Not using digital tube, just do the prediction
             int result=touch_digit_recognition->predict(image_data.data);
 
             lvgl_ui_update_digit_label(result);
+
+            g_image.clear();
 
             
         }
