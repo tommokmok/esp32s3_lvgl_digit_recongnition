@@ -75,6 +75,6 @@ For detailed implementation, please check my blog: [https://tommokmok.github.io/
 
 ## Improvements
 
-- The input size is currently too small. Consider increasing it from 64x64 to 128x128.
-- When clearing the screen, the output text should also reset to an empty state.
-- Can implment a real time digit recongnition
+- The input size is currently too small. Consider increasing it from 64x64 to 128x128. -- Done
+- When clearing the screen, the output text should also reset to an empty state. -- Done
+- Can implment a real time digit recongnition -- Done (Set to 200ms delay)
