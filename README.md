@@ -44,7 +44,7 @@ For detailed implementation, please check my blog: [https://tommokmok.github.io/
 
 ## Test Video
 
-[Please check](https://www.youtube.com/shorts/gx1x1HtLqbE)
+[Please check](https://youtube.com/shorts/B73eYAXCKzQ?feature=share)
 
 ## Development Timeline
 
