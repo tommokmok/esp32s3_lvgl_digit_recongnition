@@ -6,7 +6,7 @@
 
 #include "lvgl_ui.h"
 #include "sketchpad.h"
-
+#include "string.h"
 /* LCD size */
 #define EXAMPLE_LCD_H_RES (240)
 #define EXAMPLE_LCD_V_RES (320)
@@ -41,6 +41,7 @@
 #define TOUCH_CS_PIN (GPIO_NUM_15)
 
 static const char *TAG = "EXAMPLE";
+static lv_timer_t *_predicTimer = NULL;
 
 /**********************
  *  STATIC PROTOTYPES
@@ -238,6 +239,49 @@ void lv_color_rgb565_to_grayscale(const uint16_t *src, uint8_t *dst, int width, 
         dst[i] = gray;
     }
 }
+
+/**
+ * Convert a 128x128 RGB565 buffer to a 25x30 grayscale buffer (downsample).
+ * src: pointer to 128x128 RGB565 buffer
+ * dst: pointer to 25x30 grayscale buffer (1 byte per pixel)
+ */
+void lvgl_downsample_128x128_to_25x30(const uint16_t *src, uint8_t *dst)
+{
+    const int src_width = 128;
+    const int src_height = 128;
+    const int dst_width = 30;
+    const int dst_height = 25;
+
+    // Calculate scale factors
+    float scale_x = (float)src_width / dst_width;
+    float scale_y = (float)src_height / dst_height;
+
+    for (int dy = 0; dy < dst_height; dy++)
+    {
+        for (int dx = 0; dx < dst_width; dx++)
+        {
+            // Find the corresponding source pixel (nearest neighbor)
+            int sx = (int)(dx * scale_x);
+            int sy = (int)(dy * scale_y);
+            if (sx >= src_width)
+                sx = src_width - 1;
+            if (sy >= src_height)
+                sy = src_height - 1;
+            uint16_t pixel = src[sy * src_width + sx];
+
+            // Convert RGB565 to grayscale
+            uint8_t r = (pixel >> 11) & 0x1F;
+
+            uint8_t gray = 0;
+            if ((r - 25) > 0)
+            {
+                gray = 1; // Test on the output buffer. Min=25 for no point
+
+                dst[dy * dst_width + dx] = gray;
+            }
+        }
+    }
+}
 void print_pixel()
 {
     for (int y = 0; y < CANVAS_WIDTH; y++)
@@ -249,6 +293,19 @@ void print_pixel()
         }
         printf("\n");
     }
+}
+
+// Delayed callback function
+static void predict_delayed_cb(lv_timer_t *timer)
+{
+    // Example: call prediction function again after delay
+    if (_sketchpad && _pPredicFunc)
+    {
+        lv_100ask_sketchpad_t *_sketchpad_t = (lv_100ask_sketchpad_t *)_sketchpad;
+        lvgl_downsample_128x128_to_25x30((const uint16_t *)(_sketchpad_t->draw_buf->data), _grayScaleBuffer);
+        ESP_ERROR_CHECK((*_pPredicFunc)(_grayScaleBuffer, sizeof(_grayScaleBuffer)));
+    }
+    
 }
 
 static void sketchpad_toolbar_event_cb(lv_event_t *e)
@@ -264,18 +321,30 @@ static void sketchpad_toolbar_event_cb(lv_event_t *e)
         {
 
             lv_canvas_fill_bg(_sketchpad, lv_color_hex3(0xccc), LV_OPA_COVER);
+            memset(_grayScaleBuffer, 0, sizeof(_grayScaleBuffer));
+            lvgl_ui_update_digit_label(-1);
         }
         else if ((*toolbar_opt) == LV_100ASK_SKETCHPAD_TOOLBAR_OPT_WIDTH)
         {
 
             ESP_LOGI(TAG, "Width toolbar clicked");
 
-            lv_color_rgb565_to_grayscale((const uint16_t *)(_sketchpad_t->draw_buf->data), _grayScaleBuffer, 30, 25);
+            // Make a conversion from 128x128 to 25x30
+            lvgl_downsample_128x128_to_25x30((const uint16_t *)(_sketchpad_t->draw_buf->data), _grayScaleBuffer);
+            // lv_color_rgb565_to_grayscale((const uint16_t *)(_sketchpad_t->draw_buf->data), _grayScaleBuffer, 30, 25);
 
             ESP_ERROR_CHECK((*_pPredicFunc)(_grayScaleBuffer, sizeof(_grayScaleBuffer)));
 
             // print_pixel();
         }
+    }
+    else if (code == LV_EVENT_RELEASED)
+    {
+        // When user releases touch, start a timer to call predict_delayed_cb after 500ms
+        lv_timer_t *_predicTimer = lv_timer_create(predict_delayed_cb, 200, NULL);
+        lv_timer_set_repeat_count(_predicTimer, 1); // 
+        // Optionally, store timer pointer if you want to cancel it later
+        ESP_LOGI(TAG, "LV_EVENT_RELEASED");
     }
 }
 #if 0
@@ -309,14 +378,22 @@ static lv_obj_t *label_digit = NULL;
 // Function to update the digit label
 void lvgl_ui_update_digit_label(int digit)
 {
-        /* Task lock */
+    /* Task lock */
     lvgl_port_lock(0);
-    if(label_digit) {
-        char buf[8];
-        snprintf(buf, sizeof(buf), "%d", digit);
-        lv_label_set_text(label_digit, buf);
+    if (label_digit)
+    {
+        if (digit < 0 || digit > 9)
+        {
+            lv_label_set_text(label_digit, "?"); // Invalid digit
+        }
+        else
+        {
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%d", digit);
+            lv_label_set_text(label_digit, buf);
+        }
     }
-      /* Task unlock */
+    /* Task unlock */
     lvgl_port_unlock();
 }
 
@@ -329,7 +406,7 @@ static void app_main_display(void)
     /* Your LVGL objects code here .... */
 #if 1
     lv_obj_t *scr = lv_screen_active();
-    lv_draw_buf_t *draw_buf = lv_draw_buf_create(30, 25, LV_COLOR_FORMAT_RGB565, LV_STRIDE_AUTO);
+    lv_draw_buf_t *draw_buf = lv_draw_buf_create(128, 128, LV_COLOR_FORMAT_RGB565, LV_STRIDE_AUTO);
     _sketchpad = lv_100ask_sketchpad_create(scr);
     lv_obj_set_scrollbar_mode(scr, LV_SCROLLBAR_MODE_OFF); // See no different in PC, but may have some difference in the TFT display
     lv_obj_set_scroll_snap_x(scr, LV_SCROLL_SNAP_NONE);
@@ -347,6 +424,7 @@ static void app_main_display(void)
 
     lv_canvas_fill_bg(_sketchpad, lv_color_hex3(0xccc), LV_OPA_COVER);
     lv_obj_align(_sketchpad, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_add_event_cb(_sketchpad, sketchpad_toolbar_event_cb, LV_EVENT_RELEASED, NULL);
 
     /* Prediction label */
     label_prediction = lv_label_create(scr);
