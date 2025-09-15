@@ -327,7 +327,7 @@ static void sketchpad_toolbar_event_cb(lv_event_t *e)
         else if ((*toolbar_opt) == LV_100ASK_SKETCHPAD_TOOLBAR_OPT_WIDTH)
         {
 
-            ESP_LOGI(TAG, "Width toolbar clicked");
+            // ESP_LOGI(TAG, "Width toolbar clicked");
 
             // Make a conversion from 128x128 to 25x30
             lvgl_downsample_128x128_to_25x30((const uint16_t *)(_sketchpad_t->draw_buf->data), _grayScaleBuffer);
@@ -341,10 +341,10 @@ static void sketchpad_toolbar_event_cb(lv_event_t *e)
     else if (code == LV_EVENT_RELEASED)
     {
         // When user releases touch, start a timer to call predict_delayed_cb after 500ms
-        lv_timer_t *_predicTimer = lv_timer_create(predict_delayed_cb, 200, NULL);
-        lv_timer_set_repeat_count(_predicTimer, 1); // 
+        // lv_timer_t *_predicTimer = lv_timer_create(predict_delayed_cb, 200, NULL);
+        // lv_timer_set_repeat_count(_predicTimer, 1); // 
         // Optionally, store timer pointer if you want to cancel it later
-        ESP_LOGI(TAG, "LV_EVENT_RELEASED");
+        // ESP_LOGI(TAG, "LV_EVENT_RELEASED");
     }
 }
 #if 0

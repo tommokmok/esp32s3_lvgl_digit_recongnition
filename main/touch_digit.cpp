@@ -264,9 +264,9 @@ static void touch_digit_task(void *arg)
         // image_data.data = new uint8_t[image_data.size];
         // if (image_data.data != NULL)
         // {
-            // memcpy(image_data.data, g_image.data, image_data.size);
-            // Send to processing the deep learning task
-            //  xQueueSend(xImageQueue, &image_data, portMAX_DELAY);
+        // memcpy(image_data.data, g_image.data, image_data.size);
+        // Send to processing the deep learning task
+        //  xQueueSend(xImageQueue, &image_data, portMAX_DELAY);
         // }
 
         vTaskDelay(pdMS_TO_TICKS(3000)); // Delay for 3 second before next iteration, 1ms I tick
@@ -372,16 +372,22 @@ void touch_digit_recognition_task(void *arg)
     {
         if (xQueueReceive(xImageQueue, &image_data, portMAX_DELAY) == pdTRUE)
         {
-            g_image.print();
-    
-            // Not using digital tube, just do the prediction
-            int result=touch_digit_recognition->predict(image_data.data);
+            // g_image.print();
 
-            lvgl_ui_update_digit_label(result);
+            // Send data via uart
+            esp_log_write(ESP_LOG_INFO, TAG, "START,");
+            for (int y = 0; y < 25; y++)
+            {
+                for (int x = 0; x < 30; x++)
+                {
+                    esp_log_write(ESP_LOG_INFO, TAG, "%d,",g_image.data[y * 30 + x]);
+                }
+               
+                
+            }
+            esp_log_write(ESP_LOG_INFO, TAG, "END\n"); // Notes: `\n` will auto convert to `\r\n` after send the log
 
             g_image.clear();
-
-            
         }
     }
 
@@ -411,8 +417,8 @@ extern "C" esp_err_t touch_digit_send_to_dl(uint8_t *data, size_t size)
 {
     image_data_t image_data;
     image_data.size = size;
-    
-    if (data!= NULL)
+
+    if (data != NULL)
     {
         // memcpy(image_data.data, g_image.data, image_data.size);
         memcpy(g_image.data, data, image_data.size);
@@ -420,10 +426,9 @@ extern "C" esp_err_t touch_digit_send_to_dl(uint8_t *data, size_t size)
         xQueueSend(xImageQueue, &image_data, portMAX_DELAY);
         return ESP_OK;
     }
-    
+
     else
     {
         return ESP_FAIL;
     }
-
 }
