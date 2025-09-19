@@ -11,4 +11,6 @@ test_apps/*/*/build_*
 test_apps/*/override-result.sdkconfig
 pytest_log
 
+*/dataset/*
+
 dependencies.lock*
