@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 from PIL import Image
 
+from datetime import datetime
+
 DATASET_DIR = Path("./models/dataset")
 OUTPUT_C = DATASET_DIR / "digit_test_data.c"
 OUTPUT_H = DATASET_DIR / "digit_test_data.h"
@@ -42,6 +44,15 @@ def generate_c_arrays():
 
 def write_h_file(num_samples):
     with open(OUTPUT_H, "w") as f:
+        f.write("// Auto-generated file by c_code_generated.py .\n\n")
+        f.write(f"// Generated on: {datetime.now().strftime('%Y-%m-%d')}\n\n")
+        f.write("// Description:\n")
+        f.write("// This header provides digit test data for evaluating digit recognition models on ESP32.\n")
+        f.write("// Usage:\n")
+        f.write("//   - digit_test_data[DIGIT_TEST_NUM][DIGIT_TEST_IMG_SIZE] contains binary images (0/1) of handwritten digits.\n")
+        f.write("//   - digit_test_label[DIGIT_TEST_NUM] contains the ground truth label (0-9) for each image.\n")
+        f.write("//   - Each image is 25 rows x 30 columns (DIGIT_TEST_IMG_ROWS x DIGIT_TEST_IMG_COLS).\n")
+        f.write("//   - Pass each image to your model and compare the predicted digit with digit_test_label.\n\n")
         f.write("#pragma once\n\n")
         f.write("#define DIGIT_TEST_IMG_ROWS %d\n" % IMG_ROWS)
         f.write("#define DIGIT_TEST_IMG_COLS %d\n" % IMG_COLS)

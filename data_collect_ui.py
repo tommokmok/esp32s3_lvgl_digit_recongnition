@@ -31,8 +31,6 @@ class SerialThread(threading.Thread):
                         # print(f"Full buffer before processing: {self.buffer}")  # Debug print to trace full buffer
                         parts = self.buffer.split(',')
                       
-                        # print(parts[0] == "START")
-                        # print(parts[-1] == "END\r\n")
                         if parts[0] == "START" and parts[-1] == "END\r\n":
                             # print(f"Processing the data")
                             raw_data = parts[1:-1] # Notes: Not inclue the last one
@@ -53,21 +51,20 @@ class SerialThread(threading.Thread):
             # Dynamically get the latest data_type from the UI spinbox
             if hasattr(self.callback, '__self__') and hasattr(self.callback.__self__, 'data_type'):
                 self.data_type= self.callback.__self__.data_type.get()
-                # print(f"Current data_type: {self.data_type}")
-                # Dynamically get the latest count from the UI
+                
+            # Dynamically get the latest count from the UI
             if hasattr(self.callback, '__self__') and hasattr(self.callback.__self__, 'packet_count'):
                 self.count= self.callback.__self__.packet_count
-                # print(f"Current data_type: {self.data_type}")
-
+            
             int_arr = [int(x) for x in str_list]
             #Scale 0->0, 1->255 for visibility
             img_arr = (np.array(int_arr, dtype=np.uint8) * 255).reshape((25, 30))
-            # img_arr = np.array(int_arr, dtype=np.uint8).reshape((25, 30))  # 25 rows, 30 cols
+          
             img = Image.fromarray(img_arr)
             if img.mode != "L":
                 img = img.convert("L")
-            image_path=Path(f"./models/dataset/{self.data_type}")
 
+            image_path=Path(f"./models/dataset/{self.data_type}")
             if not image_path.exists():
                 image_path.mkdir(parents=True, exist_ok=True)
             
