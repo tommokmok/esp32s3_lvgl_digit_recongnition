@@ -53,7 +53,7 @@ int DataPostprocessor::process()
     int size = m_model_output->get_size();
     auto max_iter = std::max_element(output_ptr, output_ptr + size);
     int max_index = std::distance(output_ptr, max_iter);
-    ESP_LOGI(TAG, "Predict result: %d", max_index);
+    // ESP_LOGI(TAG, "Predict result: %d", max_index);
     return max_index;
 }
 

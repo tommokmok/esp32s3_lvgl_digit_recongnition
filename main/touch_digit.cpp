@@ -22,6 +22,8 @@
 #include "touch_digit_recognition.h"
 #include "lvgl_ui.h"
 
+#include "digit_test_data.h"
+
 static const char *TAG = "touch_digit";
 
 #define REALLY_DATA_PRINT 0 // If you need to collect data using the host computer, please set this macro to true
@@ -255,21 +257,37 @@ static void touch_digit_task(void *arg)
     memcpy(g_image.data, mnistData, sizeof(mnistData));
     // print the TouchImage row length and column length
     ESP_LOGI(TAG, "TouchImage row length: %d, column length: %d\n", (int)g_image.row_length, (int)g_image.col_length);
+    TouchDigitRecognition *touch_digit_recognition = new TouchDigitRecognition("model", 25 * 30);
+
     while (1)
     {
-        // send data to dl inference
-        // g_image.print();
-        // image_data_t image_data;
-        // image_data.size = g_image.col_length * g_image.row_length;
-        // image_data.data = new uint8_t[image_data.size];
-        // if (image_data.data != NULL)
-        // {
-        // memcpy(image_data.data, g_image.data, image_data.size);
-        // Send to processing the deep learning task
-        //  xQueueSend(xImageQueue, &image_data, portMAX_DELAY);
-        // }
+        int failure=0;
+        int success=0;
+        //Test the digit dataset
+        for (int i = 0; i < DIGIT_TEST_NUM; i++) 
+        {
+            
+            memcpy(g_image.data, (uint8_t *)digit_test_data[i], sizeof(mnistData));
 
-        vTaskDelay(pdMS_TO_TICKS(3000)); // Delay for 3 second before next iteration, 1ms I tick
+            int result=touch_digit_recognition->predict(g_image.data);
+
+            if (result == digit_test_label[i]) 
+            {
+                ESP_LOGI(TAG, "Test sample %d: Ground Truth: %d, Prediction: %d -- Correct", i, digit_test_label[i], result);
+                success++;
+            } 
+            else 
+            {
+                ESP_LOGI(TAG, "Test sample %d: Ground Truth: %d, Prediction: %d -- Incorrect", i, digit_test_label[i], result);
+                failure++;
+            }
+
+        }
+
+        ESP_LOGI(TAG, "Test completed. Total: %d, Success: %d, Failure: %d", DIGIT_TEST_NUM, success, failure);
+        //Print out the precentage of success
+        ESP_LOGI(TAG, "Success rate: %.2f%%", (success * 100.0) / DIGIT_TEST_NUM);
+        vTaskDelay(pdMS_TO_TICKS(300000)); // Delay for 3 second before next iteration, 1ms I tick
     }
 }
 
@@ -362,38 +380,38 @@ static void touch_digit_task(void *arg)
 }
 #endif
 
-void touch_digit_recognition_task(void *arg)
-{
-    image_data_t image_data = {};
+// void touch_digit_recognition_task(void *arg)
+// {
+//     image_data_t image_data = {};
 
-    TouchDigitRecognition *touch_digit_recognition = new TouchDigitRecognition("model", 25 * 30);
+//     TouchDigitRecognition *touch_digit_recognition = new TouchDigitRecognition("model", 25 * 30);
 
-    while (1)
-    {
-        if (xQueueReceive(xImageQueue, &image_data, portMAX_DELAY) == pdTRUE)
-        {
-            // g_image.print();
+//     while (1)
+//     {
+//         if (xQueueReceive(xImageQueue, &image_data, portMAX_DELAY) == pdTRUE)
+//         {
+//             // g_image.print();
 
-            // Send data via uart
-            esp_log_write(ESP_LOG_INFO, TAG, "START,");
-            for (int y = 0; y < 25; y++)
-            {
-                for (int x = 0; x < 30; x++)
-                {
-                    esp_log_write(ESP_LOG_INFO, TAG, "%d,",g_image.data[y * 30 + x]);
-                }
+//             // Send data via uart
+//             esp_log_write(ESP_LOG_INFO, TAG, "START,");
+//             for (int y = 0; y < 25; y++)
+//             {
+//                 for (int x = 0; x < 30; x++)
+//                 {
+//                     esp_log_write(ESP_LOG_INFO, TAG, "%d,",g_image.data[y * 30 + x]);
+//                 }
                
                 
-            }
-            esp_log_write(ESP_LOG_INFO, TAG, "END\n"); // Notes: `\n` will auto convert to `\r\n` after send the log
+//             }
+//             esp_log_write(ESP_LOG_INFO, TAG, "END\n"); // Notes: `\n` will auto convert to `\r\n` after send the log
 
-            g_image.clear();
-        }
-    }
+//             g_image.clear();
+//         }
+//     }
 
-    delete touch_digit_recognition;
-    vTaskDelete(NULL);
-}
+//     delete touch_digit_recognition;
+//     vTaskDelete(NULL);
+// }
 
 esp_err_t touch_digit_init(void)
 {
@@ -405,7 +423,7 @@ esp_err_t touch_digit_init(void)
     assert(data_queue != NULL);
 
     TaskHandle_t task_handle = NULL;
-    xTaskCreate(touch_digit_recognition_task, "touch_digit_recognition_task", 4096, NULL, 5, &task_handle);
+    // xTaskCreate(touch_digit_recognition_task, "touch_digit_recognition_task", 4096, NULL, 5, &task_handle);
 
     vTaskDelay(pdMS_TO_TICKS(1000));
     xTaskCreate(touch_digit_task, "touch_digit_task", 4096, data_queue, 5, &task_handle);
