@@ -7,6 +7,10 @@
 | 2025-09-11 | Project started  |
 | 2025-09-12 | Add Imporvement: Larger input size, auto predic |
 
+## Updated
+
+Added seperate branch for data collection and testing. Please check: https://github.com/tommokmok/esp32s3_lvgl_digit_recongnition/tree/test/datatset_create for details
+
 ## Introduction
 
 This project demonstrates digit recognition on an ESP32-S3 development board. It is based on [touchpad_digit_recognition](https://github.com/espressif/esp-iot-solution/tree/master/examples/ai/esp_dl/touchpad_digit_recognition), and integrates the [LVGL library](https://github.com/tommokmok/esp32s3_lvgl_idf) and the [Sketchpad application](https://github.com/tommokmok/esp32s3_YetAnotherSketchpad).
