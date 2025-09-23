@@ -46,7 +46,9 @@ please make a python script for geneate c code from the models/dataset. The fode
 ```
 
 
-For the detail implementation notes, please check on my blog:
+For the detail implementation notes, please check on my blog: https://tommokmok.github.io/2025/09/15/Digit-Recongition-Optimization-Seires-00-Testing/
+
+
 
 
 ## Screenshots
