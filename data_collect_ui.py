@@ -83,7 +83,14 @@ class SerialUI:
         self.ser = None
         self.serial_thread = None
 
-        self.packet_count = 0  # Counter for received packets
+        # Add entry for starting packet_count
+        self.packet_count_label = ttk.Label(root, text="Start Packet Count:")
+        self.packet_count_label.grid(row=0, column=4, padx=5, pady=5)
+        self.packet_count_var = tk.IntVar(value=0)
+        self.packet_count_entry = ttk.Entry(root, textvariable=self.packet_count_var, width=8)
+        self.packet_count_entry.grid(row=0, column=5, padx=5, pady=5)
+
+        self.packet_count = self.packet_count_var.get()  # Counter for received packets
 
         self.com_label = ttk.Label(root, text="Select COM Port:")
         self.com_label.grid(row=0, column=0, padx=5, pady=5)
@@ -112,11 +119,11 @@ class SerialUI:
         self.clear_counter_btn.grid(row=2, column=3, padx=5, pady=5)
 
         self.data_display = tk.Text(root, height=20, width=60, state="disabled", wrap="none")
-        self.data_display.grid(row=3, column=0, columnspan=4, padx=5, pady=5)
+        self.data_display.grid(row=3, column=0, columnspan=6, padx=5, pady=5)
 
         self.scroll_x = tk.Scrollbar(root, orient="horizontal", command=self.data_display.xview)
         self.data_display.configure(xscrollcommand=self.scroll_x.set)
-        self.scroll_x.grid(row=4, column=0, columnspan=4, sticky="ew")
+        self.scroll_x.grid(row=4, column=0, columnspan=6, sticky="ew")
 
     def get_com_ports(self):
         ports = serial.tools.list_ports.comports()
@@ -131,6 +138,12 @@ class SerialUI:
             self.combobox.set('')
 
     def connect(self):
+        # Update packet_count from entry before connecting
+        try:
+            self.packet_count = int(self.packet_count_var.get())
+        except Exception:
+            self.packet_count = 0
+            self.packet_count_var.set(0)
         port = self.combobox.get()
         if not port:
             messagebox.showerror("Error", "Please select a COM port.")
@@ -162,6 +175,7 @@ class SerialUI:
 
     def clear_counter(self):
         self.packet_count = 0
+        self.packet_count_var.set(0)
         self.counter_label.config(text=f"Packets Received: {self.packet_count}")
 
     def display_data(self, raw_data):
