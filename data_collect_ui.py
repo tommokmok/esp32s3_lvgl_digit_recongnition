@@ -34,7 +34,10 @@ class SerialThread(threading.Thread):
                         if parts[0] == "START" and parts[-1] == "END\r\n":
                             # print(f"Processing the data")
                             raw_data = parts[1:-1] # Notes: Not inclue the last one
-                            self.save_as_png_if_valid(raw_data)
+                            ret=self.save_as_png_if_valid(raw_data)
+                            if ret!=0:
+                                self.buffer = ""
+                                continue
                             self.callback(raw_data)
                             # print(f"Received raw data: {','.join(raw_data)}")
                             self.buffer = ""
@@ -46,7 +49,7 @@ class SerialThread(threading.Thread):
         """
         if len(str_list) != 750:
             print(f"Data size is not 750, got {len(str_list)}")
-            return
+            return -1
         try:
             # Dynamically get the latest data_type from the UI spinbox
             if hasattr(self.callback, '__self__') and hasattr(self.callback.__self__, 'data_type'):
@@ -72,7 +75,9 @@ class SerialThread(threading.Thread):
             print("Saved output.png")
             self.count+=1
         except Exception as e:
-            print(f"Failed to convert/save PNG: {e}")                
+            print(f"Failed to convert/save PNG: {e}")   
+            return -1        
+        return 0 
     def stop(self):
         self.running = False
 
